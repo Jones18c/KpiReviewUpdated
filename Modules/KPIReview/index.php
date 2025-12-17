@@ -283,7 +283,7 @@ if ($_SERVER['REQUEST_METHOD'] <> 'POST') {
             }
             
             // All fields filled - show confirmation
-            if (!confirm('Are you sure you want to publish this KPI Manager Report?\n\nThis will send email notifications and cannot be undone.\n\nClick OK to publish or Cancel to go back.')) {
+            if (!confirm('Are you sure you want to publish this KPI Manager Report?\n\nThis cannot be undone.\n\nClick OK to publish or Cancel to go back.')) {
                 e.preventDefault();
                 return false;
             }
@@ -370,7 +370,7 @@ Your previous entries have been loaded below. You can continue editing and eithe
 <?php else: ?>
 <div class="alert alert-info" role="alert">
 <span class="bi bi-info-circle" style="vertical-align: middle;"> <Strong>Notice:</strong>
-This form saves your information as you enter it. You can close your browser and return later to continue filling it out. Use "Save Draft" to save without publishing, or "Publish" to make it visible in the management page and send email notifications.
+This form saves your information as you enter it. You can close your browser and return later to continue filling it out. Use "Save Draft" to save without publishing, or "Publish" to make it visible in the management page.
 </div>
 <?php endif; ?>
 <div class="alert alert-primary" role="alert">
@@ -667,7 +667,9 @@ if (!empty($userDrafts)) {
     // Determine action: 'save' (draft) or 'publish'
     $action = isset($_POST['action']) ? $_POST['action'] : 'save';
     $status = ($action == 'publish') ? 'PUBLISHED' : 'DRAFT';
-    $sendEmail = ($action == 'publish');
+    // COMMENTED OUT: Email sending disabled
+    // $sendEmail = ($action == 'publish');
+    $sendEmail = false; // Emails disabled
     
     // Escape all form inputs
     $month = $conn->real_escape_string($_POST['month']);
@@ -881,6 +883,8 @@ if (!empty($userDrafts)) {
             echo '<h4>Your KPI Manager Report has been saved as a draft. You can continue editing it later.</h4><br>';
         }
         
+        // COMMENTED OUT: Email sending disabled
+        /*
         // Try to send email only if publishing
         $emailSent = false;
         $emailError = '';
@@ -1017,8 +1021,8 @@ if (!empty($userDrafts)) {
         $baseEmails = "pdahlson@mayesh.com,bpowell@mayesh.com,vdemetriou@mayesh.com,dburrows@mayesh.com";
         
         // COMMENTED OUT - Location-based email logic (uncomment when ready to implement)
-        /*
-        $additionalEmails = [];
+        // Nested comment converted to // style to avoid comment block issues
+        // $additionalEmails = [];
         
         // Group 1: Add psessler@mayesh.com
         // Atlanta (026), Miami (017), New Orleans (801), Orlando (802), Detroit (018), 
@@ -1061,7 +1065,7 @@ if (!empty($userDrafts)) {
         } else {
             $outEmails = $baseEmails;
         }
-        */
+        // End of location-based email logic comment
         
         // TEMPORARY: For now, send to cjones@mayesh.com and dburrows@mayesh.com for testing
         $outEmails = "cjones@mayesh.com,dburrows@mayesh.com";
@@ -1089,9 +1093,9 @@ if (!empty($userDrafts)) {
             
             // Build simple email message
             // COMMENTED OUT - Location-based email logic (uncomment when ready to implement)
-            /*
+            // Nested comment converted to // style to avoid comment block issues
             // Base emails (always sent to these)
-            $baseEmails = "pdahlson@mayesh.com,bpowell@mayesh.com,vdemetriou@mayesh.com,dburrows@mayesh.com";
+            // $baseEmails = "pdahlson@mayesh.com,bpowell@mayesh.com,vdemetriou@mayesh.com,dburrows@mayesh.com";
             
             $locationNumber = $_POST['locationNumber'];
             $additionalEmails = [];
@@ -1137,7 +1141,7 @@ if (!empty($userDrafts)) {
             } else {
                 $to = $baseEmails;
             }
-            */
+            // End of location-based email logic comment
             
             // TEMPORARY: For now, send to cjones@mayesh.com and dburrows@mayesh.com for testing
             $to = "cjones@mayesh.com,dburrows@mayesh.com";
@@ -1216,7 +1220,10 @@ if (!empty($userDrafts)) {
             error_log("KPI Manager Report email exception: " . $e->getMessage() . " in " . $e->getFile() . ":" . $e->getLine());
         }
         } // End if ($sendEmail)
+        */
         
+        // COMMENTED OUT: Email status display
+        /*
         // Show email status and debug info (only if publishing)
         if ($sendEmail) {
             echo '<div class="mt-4" style="border-top: 2px solid #ccc; padding-top: 20px;">';
@@ -1232,6 +1239,7 @@ if (!empty($userDrafts)) {
             
             echo '</div>';
         }
+        */
         
         echo '<a href="index.php" class="btn btn-success">Submit Another</a>';
         echo ' <a href="../../" class="btn btn-secondary">Return Home</a>';
