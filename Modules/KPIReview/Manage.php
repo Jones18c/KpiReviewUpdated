@@ -67,7 +67,9 @@ require("../../includes/header.inc.php");
 <div class="container">
 <div class="d-flex justify-content-between align-items-center border-bottom mb-4 mt-4">
     <h3 class="mb-0"><span class="bi bi-graph-up" style="vertical-align: middle;"></span>Manager KPI Review</h3>
-    <a href="index.php" class="btn btn-primary" title="Go back to KPI Manager Report form"><span class="bi bi-arrow-left"></span> Back to KPI Manager Report</a>
+    <div>
+        <a href="index.php" class="btn btn-primary" title="Go back to KPI Manager Report form"><span class="bi bi-arrow-left"></span> Back to KPI Manager Report</a>
+    </div>
 </div>
 
 <?php
@@ -98,101 +100,10 @@ if (!isset($conn)) {
 // Removed draft fetching - drafts are not shown on this page (only published submissions)
 $userDrafts = [];
 
-// Get last published dates for each location/month folder
-// The date shown is the actual publication date (when submitted), not the month selected in the form
-$folderLastPublished = [];
-if ($conn && !$conn->connect_error) {
-    // Query to get the most recent published date for each location/month combination
-    // Use published_at (actual publication date) if it exists, otherwise use created_at
-    // The month field is what they selected in the form (for folder organization)
-    // The published_at/created_at is when they actually submitted it (for display)
-    $lastPublishedSql = "SELECT location_name, month, 
-                         COALESCE(MAX(published_at), MAX(created_at)) as last_published, 
-                         COUNT(*) as doc_count
-                         FROM kpiReview 
-                         WHERE status = 'PUBLISHED' 
-                         GROUP BY location_name, month
-                         ORDER BY location_name, month";
-    $lastPublishedResult = $conn->query($lastPublishedSql);
-    
-    if ($lastPublishedResult && $lastPublishedResult->num_rows > 0) {
-        while($pubRow = $lastPublishedResult->fetch_assoc()) {
-            $locationKey = preg_replace('/[^a-zA-Z0-9_-]/', '_', $pubRow['location_name']);
-            $monthKey = $pubRow['month'];
-            $folderLastPublished[$locationKey][$monthKey] = [
-                'date' => $pubRow['last_published'], // This is the actual publication date (today)
-                'count' => $pubRow['doc_count']
-            ];
-        }
-    }
-}
+// Removed draft fetching - drafts are not shown on this page (only published submissions)
+$userDrafts = [];
 
 ?>
-
-<!-- Folder Structure with Last Published Dates -->
-<div class="card mb-4">
-    <div class="card-header bg-light">
-        <h5 class="mb-0"><span class="bi bi-folder"></span> KPI Review Folders</h5>
-    </div>
-    <div class="card-body">
-        <?php
-        $baseDir = __DIR__ . '/../../shared/KPIReviews';
-        
-        if (is_dir($baseDir)) {
-            // Get all location folders
-            $locationFolders = array_diff(scandir($baseDir), array('..', '.'));
-            $locationFolders = array_filter($locationFolders, function($item) use ($baseDir) {
-                return is_dir($baseDir . '/' . $item);
-            });
-            
-            if (empty($locationFolders)) {
-                echo '<div class="alert alert-info">No folders created yet. Folders will be created when reports are published.</div>';
-            } else {
-                echo '<div class="row">';
-                foreach ($locationFolders as $locationFolder) {
-                    $locationPath = $baseDir . '/' . $locationFolder;
-                    $monthFolders = array_diff(scandir($locationPath), array('..', '.'));
-                    $monthFolders = array_filter($monthFolders, function($item) use ($locationPath) {
-                        return is_dir($locationPath . '/' . $item);
-                    });
-                    
-                    if (!empty($monthFolders)) {
-                        echo '<div class="col-md-6 mb-3">';
-                        echo '<h6 class="border-bottom pb-2"><strong>' . htmlspecialchars(str_replace('_', ' ', $locationFolder)) . '</strong></h6>';
-                        echo '<ul class="list-group list-group-flush">';
-                        
-                        foreach ($monthFolders as $monthFolder) {
-                            $locationKey = $locationFolder;
-                            $monthKey = $monthFolder;
-                            
-                            if (isset($folderLastPublished[$locationKey][$monthKey])) {
-                                $lastPublished = $folderLastPublished[$locationKey][$monthKey]['date'];
-                                $docCount = $folderLastPublished[$locationKey][$monthKey]['count'];
-                                $formattedDate = !empty($lastPublished) ? date('M d, Y', strtotime($lastPublished)) : 'N/A';
-                                echo '<li class="list-group-item d-flex justify-content-between align-items-center">';
-                                echo '<span><span class="bi bi-folder-fill text-warning me-2"></span>' . htmlspecialchars($monthFolder) . '</span>';
-                                echo '<small class="text-muted">Last: ' . $formattedDate . ' (' . $docCount . ' doc' . ($docCount != 1 ? 's' : '') . ')</small>';
-                                echo '</li>';
-                            } else {
-                                echo '<li class="list-group-item d-flex justify-content-between align-items-center">';
-                                echo '<span><span class="bi bi-folder-fill text-warning me-2"></span>' . htmlspecialchars($monthFolder) . '</span>';
-                                echo '<small class="text-muted text-danger">No documents</small>';
-                                echo '</li>';
-                            }
-                        }
-                        
-                        echo '</ul>';
-                        echo '</div>';
-                    }
-                }
-                echo '</div>';
-            }
-        } else {
-            echo '<div class="alert alert-info">KPI Reviews folder structure not yet created. Folders will be created automatically when reports are published.</div>';
-        }
-        ?>
-    </div>
-</div>
 
 <!-- Search/Filter Section -->
 <div class="card mb-4">
@@ -390,7 +301,8 @@ foreach ($allRows as $row) {
                         
                         // Only show view and open buttons for published entries
                         echo '<button class="btn btn-sm btn-info view-entry me-1" data-id="' . $row['id'] . '" title="View Details"><span class="bi bi-eye"></span></button>';
-                        echo '<a href="index.php?id=' . $row['id'] . '" target="_blank" class="btn btn-sm btn-secondary" title="Open in New Tab"><span class="bi bi-box-arrow-up-right"></span></a>';
+                        echo '<a href="index.php?id=' . $row['id'] . '" target="_blank" class="btn btn-sm btn-secondary me-1" title="Open in New Tab"><span class="bi bi-box-arrow-up-right"></span></a>';
+                        echo '<a href="GeneratePDF.php?id=' . $row['id'] . '" target="_blank" class="btn btn-sm btn-danger" title="Download as PDF"><span class="bi bi-file-pdf"></span> PDF</a>';
                         echo '</td>';
                         echo '</tr>';
                 }

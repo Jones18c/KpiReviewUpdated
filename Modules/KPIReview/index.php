@@ -220,6 +220,9 @@ if ($_SERVER['REQUEST_METHOD'] <> 'POST') {
     $('#btn_Publish').click(function(e) {
         var action = $(this).val();
         if (action === 'publish') {
+            // COMMENTED OUT: Field validation removed - allow publishing with incomplete fields
+            // Users can now publish reviews even if not all fields are filled
+            /*
             // Validate all fields are filled out
             var missingFields = [];
             
@@ -281,8 +284,9 @@ if ($_SERVER['REQUEST_METHOD'] <> 'POST') {
                 alert(message);
                 return false;
             }
+            */
             
-            // All fields filled - show confirmation
+            // Show confirmation (validation removed - users can publish with incomplete fields)
             if (!confirm('Are you sure you want to publish this KPI Manager Report?\n\nThis cannot be undone.\n\nClick OK to publish or Cancel to go back.')) {
                 e.preventDefault();
                 return false;
@@ -847,11 +851,16 @@ if (!empty($userDrafts)) {
     if ($conn->query($sql) === TRUE) {
         $entryId = $draftExists ? $draftId : $conn->insert_id;
         
+        // COMMENTED OUT: Actual folder creation disabled - using visual folders instead
+        /*
         // Create folder structure for published reviews: shared/KPIReviews/{LocationName}/{Month}
         if ($action == 'publish') {
-            // Base directory for KPI reviews - go up to root, then to shared folder
-            // From Modules/KPIReview/ we need to go: ../../shared/KPIReviews
-            $baseDir = __DIR__ . '/../../shared/KPIReviews';
+            // Base directory for KPI reviews - use absolute path from root
+            // From Modules/KPIReview/ we need to go up 2 levels to get to root
+            // __DIR__ = /home/cjones/Updates to KPI/Modules/KPIReview
+            // dirname(dirname(__DIR__)) = /home/cjones/Updates to KPI
+            $rootDir = dirname(dirname(__DIR__));
+            $baseDir = $rootDir . '/shared/KPIReviews';
             
             // Sanitize location name for folder name (remove special characters, spaces become underscores)
             $locationFolder = preg_replace('/[^a-zA-Z0-9_-]/', '_', $locationName);
@@ -866,11 +875,13 @@ if (!empty($userDrafts)) {
             if (!is_dir($folderPath)) {
                 if (!mkdir($folderPath, 0775, true) && !is_dir($folderPath)) {
                     error_log("Failed to create KPI Review folder: " . $folderPath);
+                    echo '<div class="alert alert-warning">Warning: Could not create folder structure. Please check permissions.</div>';
                 } else {
                     error_log("Created KPI Review folder: " . $folderPath);
                 }
             }
         }
+        */
         
         echo '<div class="p-md-2 m-md-2 bg-white">';
         echo '<div class="container border-bottom text-center"><br>';
